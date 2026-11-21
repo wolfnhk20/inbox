@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { createUserAccountSchema } from "@/lib/validators";
 import { canManageUsers, isPrimaryAdmin } from "@/lib/auth/admin";
-import { getLicenseEntitlements } from "@/lib/licenses/service";
 import { countUsedAccountSeats } from "@/lib/licenses/seats";
 import { deleteAccounts } from "@/lib/accounts/deletion";
 import { createAccountResponse } from "./create";
@@ -14,10 +13,10 @@ export async function GET(request: Request) {
 	if (access.error) return access.error;
 	const includeContacts = canManageUsers(access.user!);
 	const rows = await listAccountsForAdmin(getDb(access.env));
-	const [{ accountSeatLimit }, seatsUsed] = await Promise.all([getLicenseEntitlements(access.env), countUsedAccountSeats(access.env)]);
+	const seatsUsed = await countUsedAccountSeats(access.env);
 	return NextResponse.json({
 		accounts: rows.map((row) => (includeContacts ? accountListItemFromUser(row) : withoutAccountContacts(accountListItemFromUser(row)))),
-		seats: { limit: accountSeatLimit, used: seatsUsed },
+		seats: { limit: null, used: seatsUsed },
 	});
 }
 
