@@ -18,7 +18,7 @@
 	"services": [
 		{
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "mailflare",
+			"service": "inbox",
 		},
 	],
 	"durable_objects": {
