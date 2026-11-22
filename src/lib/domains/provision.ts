@@ -108,13 +108,23 @@ export async function provisionDomainOnCloudflare(
 		if (enableSending) {
 			// Cloudflare refuses (401, code 2036) while another service's MX records
 			// are on the hostname; replacing them follows the same consent as routing.
-			const { subdomain, created } = await ensureSendingSubdomain(env, zone.id, normalized, {
-				replaceMx: options?.replaceMxRecords,
-				deletedMx: changes.deletedMxRecords,
-			});
-			sendingSubdomainTag = subdomain.tag;
-			sendingEnabled = subdomain.enabled;
-			if (created) changes.createdSendingSubdomainTag = subdomain.tag;
+			// A missing Email Sending permission or an un-onboarded domain (403/10000
+			// or 2036) must not abort the whole domain registration: routing still
+			// works, and sending can be enabled later from the domain page.
+			try {
+				const { subdomain, created } = await ensureSendingSubdomain(env, zone.id, normalized, {
+					replaceMx: options?.replaceMxRecords,
+					deletedMx: changes.deletedMxRecords,
+				});
+				sendingSubdomainTag = subdomain.tag;
+				sendingEnabled = subdomain.enabled;
+				if (created) changes.createdSendingSubdomainTag = subdomain.tag;
+			} catch (sendingError) {
+				console.warn("provisionDomainOnCloudflare: sending setup failed; continuing without sending", sendingError);
+				sendingRequested = false;
+				sendingEnabled = false;
+				sendingSubdomainTag = null;
+			}
 		}
 	} catch (error) {
 		await rollbackDomainProvisioning(env, changes);

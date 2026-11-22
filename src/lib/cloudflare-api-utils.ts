@@ -60,9 +60,9 @@ export function getCloudflareAuthHint(errors: CfApiError[], path = "") {
 	);
 	if (!hasAuthError) return "";
 
-	return " Verify CF_TOKEN with `curl https://api.cloudflare.com/client/v4/user/tokens/verify -H \"Authorization: Bearer <token>\"`. Use the token secret value without `Bearer`, or use CF_API_KEY plus CF_EMAIL for a Global API Key.";
+	return " Verify CF_TOKEN with `curl https://api.cloudflare.com/client/v4/user/tokens/verify -H \"Authorization: Bearer <token>\"`. For /email/sending/* failures also confirm the token has `Email Sending: Edit` (Account level) and that the domain is onboarded under Cloudflare Dashboard > Compute > Email Service > Email Sending; use the token secret value without `Bearer`, or use CF_API_KEY plus CF_EMAIL for a Global API Key.";
 }
 
 export function getEmailWorkerName(env?: { CF_EMAIL_WORKER_NAME?: string }): string {
-	return env?.CF_EMAIL_WORKER_NAME?.trim() || "mailflare";
+	return env?.CF_EMAIL_WORKER_NAME?.trim() || "inbox";
 }
